@@ -33,6 +33,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetDescription,
 } from '@/components/ui/sheet'
 import {
   UsersRound,
@@ -541,6 +542,12 @@ export default function GroupsPage() {
       {/* ─── Group Detail Sheet ─────────────────────────────────── */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+          <SheetTitle className="sr-only">
+            {groupDetail ? groupDetail.name : 'Détail du groupe'}
+          </SheetTitle>
+          <SheetDescription className="sr-only">
+            {groupDetail ? `Détails du groupe ${groupDetail.name}` : 'Informations sur le groupe'}
+          </SheetDescription>
           <SheetHeader className="pb-4 border-b">
             {groupDetail && (
               <div className="flex items-center gap-3">
@@ -548,7 +555,7 @@ export default function GroupsPage() {
                   {groupDetail.name.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <SheetTitle className="text-left">{groupDetail.name}</SheetTitle>
+                  <h3 className="text-lg font-semibold text-left">{groupDetail.name}</h3>
                   <Badge variant="outline" className={`text-xs mt-1 ${GROUP_TYPE_BADGE[groupDetail.type] || ''}`}>
                     {GROUP_TYPE_LABELS[groupDetail.type] || groupDetail.type}
                   </Badge>
