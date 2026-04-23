@@ -779,3 +779,38 @@ Files Created:
 
 Files Modified:
 - /home/z/my-project/src/components/dashboard/dashboard-layout.tsx (added 4 new page imports + MembersPage/ActivitiesPage, removed PlaceholderPage and Sparkles)
+
+---
+Task ID: 8
+Agent: API Route Developer
+Task: Add missing API route files for members update, audit logs, and cemetery concessions
+
+Work Log:
+- Read worklog.md for project context and existing API route patterns
+- Reviewed existing Prisma schema (User, AuditLog, CemeteryConcession, Defunt models)
+- Reviewed existing API route patterns (NextRequest/NextResponse, db import, async params, error handling)
+- Created 3 new API route files following existing project patterns
+
+1. Created /api/churches/[churchId]/members/[memberId]/route.ts — PUT endpoint:
+   - Accepts PUT with body containing fields to update (firstName, lastName, email, phone, address, role, isActive)
+   - Verifies member belongs to the specified churchId before updating (404 if not found)
+   - Uses db.user.update() where id matches memberId
+   - Returns updated user without password (explicit select excluding password field)
+   - Only updates fields that are explicitly provided in the request body
+
+2. Created /api/audit/route.ts — GET endpoint:
+   - Accepts churchId as query param (required, returns 400 if missing)
+   - Returns audit logs ordered by createdAt desc, limit 50
+   - Includes user relation with firstName and lastName select
+
+3. Created /api/cemetery/concessions/route.ts — GET + POST endpoints:
+   - GET: Accepts churchId as query param (required), returns concessions with owner relation (id, firstName, lastName, email, phone) and defunts relation, ordered by createdAt desc
+   - POST: Accepts churchId, ownerId, location, plotNumber, startDate, endDate, duration, notes; creates concession with ACTIVE status; returns created concession with owner and defunts relations
+
+- Ran `bun run lint` — 0 errors, 0 warnings
+- Dev server compiling successfully
+
+Files Created:
+- /home/z/my-project/src/app/api/churches/[churchId]/members/[memberId]/route.ts
+- /home/z/my-project/src/app/api/audit/route.ts
+- /home/z/my-project/src/app/api/cemetery/concessions/route.ts

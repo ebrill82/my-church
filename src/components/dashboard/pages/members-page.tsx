@@ -53,6 +53,7 @@ import {
   ChevronRight,
   Users,
 } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface GroupMemberData {
   group: {
@@ -228,16 +229,23 @@ export default function MembersPage() {
     if (!churchId) return
     setSubmitting(true)
     try {
-      await fetch('/api/churches/' + churchId + '/members', {
+      const res = await fetch('/api/churches/' + churchId + '/members', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
-      setAddDialogOpen(false)
-      resetForm()
-      fetchMembers()
+      if (res.ok) {
+        toast.success('Fidèle ajouté avec succès')
+        setAddDialogOpen(false)
+        resetForm()
+        fetchMembers()
+      } else {
+        const data = await res.json()
+        toast.error(data.message || 'Erreur lors de l\'ajout')
+      }
     } catch (error) {
       console.error('Error adding member:', error)
+      toast.error('Erreur lors de l\'ajout')
     } finally {
       setSubmitting(false)
     }
@@ -247,17 +255,24 @@ export default function MembersPage() {
     if (!churchId || !selectedMember) return
     setSubmitting(true)
     try {
-      await fetch('/api/churches/' + churchId + '/members/' + selectedMember.id, {
+      const res = await fetch('/api/churches/' + churchId + '/members/' + selectedMember.id, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
-      setEditDialogOpen(false)
-      setSelectedMember(null)
-      resetForm()
-      fetchMembers()
+      if (res.ok) {
+        toast.success('Fidèle modifié avec succès')
+        setEditDialogOpen(false)
+        setSelectedMember(null)
+        resetForm()
+        fetchMembers()
+      } else {
+        const data = await res.json()
+        toast.error(data.message || 'Erreur lors de la modification')
+      }
     } catch (error) {
       console.error('Error editing member:', error)
+      toast.error('Erreur lors de la modification')
     } finally {
       setSubmitting(false)
     }
@@ -266,14 +281,20 @@ export default function MembersPage() {
   const handleToggleStatus = async (member: Member) => {
     if (!churchId) return
     try {
-      await fetch('/api/churches/' + churchId + '/members/' + member.id, {
+      const res = await fetch('/api/churches/' + churchId + '/members/' + member.id, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isActive: !member.isActive }),
       })
-      fetchMembers()
+      if (res.ok) {
+        toast.success(member.isActive ? 'Fidèle désactivé' : 'Fidèle activé')
+        fetchMembers()
+      } else {
+        toast.error('Erreur lors du changement de statut')
+      }
     } catch (error) {
       console.error('Error toggling status:', error)
+      toast.error('Erreur lors du changement de statut')
     }
   }
 

@@ -60,6 +60,8 @@ interface AppState {
   // Auth
   user: User | null
   church: Church | null
+  churchId: string | null
+  userId: string | null
   isAuthenticated: boolean
   isLoading: boolean
   login: (user: User, church: Church | null) => void
@@ -89,12 +91,16 @@ export const useAppStore = create<AppState>((set) => ({
   // Auth
   user: null,
   church: null,
+  churchId: null,
+  userId: null,
   isAuthenticated: false,
   isLoading: true,
   login: (user, church) => {
     set({
       user,
       church: church ?? null,
+      churchId: church?.id ?? user.churchId ?? null,
+      userId: user.id,
       isAuthenticated: true,
       isLoading: false,
       currentPage: 'dashboard',
@@ -109,6 +115,8 @@ export const useAppStore = create<AppState>((set) => ({
     set({
       user: null,
       church: null,
+      churchId: null,
+      userId: null,
       isAuthenticated: false,
       isLoading: false,
       currentPage: 'landing',
@@ -121,6 +129,7 @@ export const useAppStore = create<AppState>((set) => ({
   setUser: (user) =>
     set({
       user,
+      userId: user?.id ?? null,
       isAuthenticated: !!user,
       isLoading: false,
     }),

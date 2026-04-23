@@ -58,8 +58,13 @@ class ApiClient {
 
   // Activities
   async getActivities(churchId: string, params?: Record<string, string>) {
-    const query = params ? '?' + new URLSearchParams(params).toString() : ''
-    return this.request(`/activities?churchId=${churchId}${query ? '&' + query.slice(1) : ''}`)
+    const searchParams = new URLSearchParams({ churchId })
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value) searchParams.set(key, value)
+      })
+    }
+    return this.request(`/activities?${searchParams.toString()}`)
   }
 
   async createActivity(data: Record<string, unknown>) {

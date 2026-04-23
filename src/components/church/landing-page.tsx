@@ -541,7 +541,7 @@ export default function LandingPage() {
               Finies les contraintes de la <span className="text-primary">gestion manuelle</span>
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Passez d&apos;une gestionfragmentée à une solution digitale complète
+              Passez d&apos;une gestion fragmentée à une solution digitale complète
             </p>
           </motion.div>
 
@@ -934,7 +934,7 @@ export default function LandingPage() {
 
           {/* Bottom bar */}
           <div className="mt-12 pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-            <p>&copy; 2025 My Church. Tous droits réservés.</p>
+            <p>&copy; {new Date().getFullYear()} My Church. Tous droits réservés.</p>
             <p className="flex items-center gap-1">
               Made with <Heart className="size-3.5 text-red-500 fill-red-500" /> in Africa
             </p>

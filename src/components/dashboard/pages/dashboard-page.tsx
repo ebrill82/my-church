@@ -30,7 +30,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useAppStore } from '@/lib/store'
+import { useAppStore, type AppPage } from '@/lib/store'
 
 // Types for the stats API response
 interface MonthlyDonation {
@@ -169,7 +169,7 @@ function ListSkeleton() {
 }
 
 export default function DashboardPage() {
-  const churchId = useAppStore((s) => s.churchId)
+  const { churchId, setPage } = useAppStore()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -518,7 +518,7 @@ export default function DashboardPage() {
           <Card className="rounded-lg">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base">Activités à venir</CardTitle>
-              <button className="flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+              <button className="flex items-center gap-1 text-sm font-medium text-primary hover:underline" onClick={() => setPage('dashboard-activities')}>
                 Voir tout
                 <ArrowRight className="h-3.5 w-3.5" />
               </button>
@@ -593,7 +593,7 @@ export default function DashboardPage() {
           <Card className="rounded-lg h-full">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base">Nouveaux fidèles</CardTitle>
-              <button className="flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+              <button className="flex items-center gap-1 text-sm font-medium text-primary hover:underline" onClick={() => setPage('dashboard-members')}>
                 Voir tout
                 <ArrowRight className="h-3.5 w-3.5" />
               </button>
@@ -650,7 +650,7 @@ export default function DashboardPage() {
         <CardContent>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             {/* Pending Appointments */}
-            <button className="flex items-center gap-4 rounded-lg border bg-amber-50/50 p-4 text-left transition-colors hover:bg-amber-50 dark:bg-amber-950/20 dark:hover:bg-amber-950/30">
+            <button className="flex items-center gap-4 rounded-lg border bg-amber-50/50 p-4 text-left transition-colors hover:bg-amber-50 dark:bg-amber-950/20 dark:hover:bg-amber-950/30" onClick={() => setPage('dashboard-appointments')}>
               <div className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/40">
                 <CalendarCheck className="h-5 w-5 text-amber-600 dark:text-amber-400" />
               </div>
@@ -663,7 +663,7 @@ export default function DashboardPage() {
             </button>
 
             {/* Pending Certificates */}
-            <button className="flex items-center gap-4 rounded-lg border bg-blue-50/50 p-4 text-left transition-colors hover:bg-blue-50 dark:bg-blue-950/20 dark:hover:bg-blue-950/30">
+            <button className="flex items-center gap-4 rounded-lg border bg-blue-50/50 p-4 text-left transition-colors hover:bg-blue-50 dark:bg-blue-950/20 dark:hover:bg-blue-950/30" onClick={() => setPage('dashboard-certificates')}>
               <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40">
                 <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </div>
@@ -678,7 +678,7 @@ export default function DashboardPage() {
             </button>
 
             {/* Group Invitations (decorative) */}
-            <div className="flex items-center gap-4 rounded-lg border bg-purple-50/50 p-4 dark:bg-purple-950/20">
+            <button className="flex items-center gap-4 rounded-lg border bg-purple-50/50 p-4 text-left transition-colors hover:bg-purple-50 dark:bg-purple-950/20 dark:hover:bg-purple-950/30" onClick={() => setPage('dashboard-groups')}>
               <div className="flex h-11 w-11 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/40">
                 <Users className="h-5 w-5 text-purple-600 dark:text-purple-400" />
               </div>
@@ -688,7 +688,7 @@ export default function DashboardPage() {
                   Groupes actifs
                 </p>
               </div>
-            </div>
+            </button>
           </div>
         </CardContent>
       </Card>
