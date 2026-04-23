@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { motion, useInView } from 'framer-motion'
 import {
   Church,
@@ -105,9 +105,18 @@ function CrossDecoration({ className = '' }: { className?: string }) {
 // ═══════════════════════════════════════════════════════════════════════
 
 export default function LandingPage() {
-  const { setAuthModal, setPage } = useAppStore()
+  const { setPage } = useAppStore()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [annualPricing, setAnnualPricing] = useState(false)
+  const [featuredChurches, setFeaturedChurches] = useState<Array<{ id: string; name: string; slug: string; city: string; country: string; numberOfFaithful: number; plan: string; memberCount: number }>>([])
+
+  // Fetch featured churches
+  useEffect(() => {
+    fetch('/api/churches?limit=6')
+      .then(res => res.ok ? res.json() : [])
+      .then(data => setFeaturedChurches(Array.isArray(data) ? data.slice(0, 6) : []))
+      .catch(() => {})
+  }, [])
 
   // ─── Navigation links ─────────────────────────────────────────────
   const navLinks = [
@@ -187,7 +196,7 @@ export default function LandingPage() {
         'Calendrier 7 jours',
       ],
       cta: 'Commencer gratuitement',
-      ctaAction: () => setAuthModal(true, 'register'),
+      ctaAction: () => setPage('register'),
       highlighted: false,
     },
     {
@@ -206,7 +215,7 @@ export default function LandingPage() {
         'Dashboard stats',
       ],
       cta: 'Essai gratuit 14 jours',
-      ctaAction: () => setAuthModal(true, 'register'),
+      ctaAction: () => setPage('register-church'),
       highlighted: true,
     },
     {
@@ -224,7 +233,7 @@ export default function LandingPage() {
         'App mobile white label',
       ],
       cta: 'Essai gratuit 14 jours',
-      ctaAction: () => setAuthModal(true, 'register'),
+      ctaAction: () => setPage('register-church'),
       highlighted: false,
     },
     {
@@ -364,15 +373,15 @@ export default function LandingPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setAuthModal(true, 'login')}
+                onClick={() => setPage('login')}
               >
                 Se connecter
               </Button>
               <Button
                 size="sm"
-                onClick={() => setAuthModal(true, 'register')}
+                onClick={() => setPage('register-church')}
               >
-                Commencer gratuitement
+                Créer ma paroisse
               </Button>
             </div>
 
@@ -409,7 +418,7 @@ export default function LandingPage() {
                   <Button
                     variant="outline"
                     onClick={() => {
-                      setAuthModal(true, 'login')
+                      setPage('login')
                       setMobileMenuOpen(false)
                     }}
                   >
@@ -417,11 +426,11 @@ export default function LandingPage() {
                   </Button>
                   <Button
                     onClick={() => {
-                      setAuthModal(true, 'register')
+                      setPage('register-church')
                       setMobileMenuOpen(false)
                     }}
                   >
-                    Commencer gratuitement
+                    Créer ma paroisse
                   </Button>
                 </div>
               </div>
@@ -490,10 +499,14 @@ export default function LandingPage() {
               <Button
                 size="lg"
                 className="text-base px-8 h-12 bg-[#C9A84C] hover:bg-[#B8973B] text-[#1B3A5C] font-semibold"
-                onClick={() => setAuthModal(true, 'register')}
+                onClick={() => setPage('register-church')}
               >
                 Démarrer l&apos;essai gratuit
                 <ArrowRight className="size-4 ml-2" />
+              </Button>
+              <Button variant="outline" size="lg" className="text-base px-8 h-12 border-white/30 text-white hover:bg-white/10" onClick={() => setPage('church-search')}>
+                <Users className="size-4 mr-2" />
+                Rejoindre ma paroisse
               </Button>
               <Button variant="outline" size="lg" className="text-base px-8 h-12 border-white/30 text-white hover:bg-white/10">
                 <Play className="size-4 mr-2" />
@@ -793,6 +806,61 @@ export default function LandingPage() {
         </div>
       </AnimatedSection>
 
+      {/* ─── FEATURED PARISHES SECTION ──────────────────────────────── */}
+      {featuredChurches.length > 0 && (
+        <AnimatedSection id="parishes" className="py-20 sm:py-28">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.div variants={fadeInUp} className="text-center mb-14">
+              <h2 className="font-serif text-3xl sm:text-4xl font-bold mb-4">
+                Nos <span className="text-primary">paroisses</span> partenaires
+              </h2>
+              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                Découvrez les paroisses qui nous font déjà confiance à travers l&apos;Afrique
+              </p>
+            </motion.div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+              {featuredChurches.map((church) => (
+                <motion.div key={church.id} variants={staggerItem}>
+                  <Card className="h-full group hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer" onClick={() => setPage('church-search')}>
+                    <CardContent className="pt-6">
+                      <div className="flex items-start gap-3 mb-3">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 text-primary shrink-0">
+                          <Church className="size-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="font-semibold text-sm leading-tight truncate">{church.name}</h3>
+                          <div className="flex items-center gap-1 text-muted-foreground text-xs mt-0.5">
+                            <MapPin className="size-3 shrink-0" />
+                            <span className="truncate">{church.city}, {church.country}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Users className="size-3" />
+                          {church.numberOfFaithful || church.memberCount} fidèles
+                        </span>
+                        <Badge variant="outline" className="text-[10px] h-5 px-1.5">
+                          {church.plan}
+                        </Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+
+            <div className="text-center mt-8">
+              <Button variant="outline" onClick={() => setPage('church-search')}>
+                Voir toutes les paroisses
+                <ArrowRight className="size-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        </AnimatedSection>
+      )}
+
       {/* ─── FAQ SECTION ───────────────────────────────────────────── */}
       <AnimatedSection id="faq" className="py-20 sm:py-28 bg-accent/30">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -859,9 +927,9 @@ export default function LandingPage() {
                 size="lg"
                 variant="secondary"
                 className="text-base px-8 h-12 font-semibold"
-                onClick={() => setAuthModal(true, 'register')}
+                onClick={() => setPage('register-church')}
               >
-                Commencer gratuitement
+                Créer ma paroisse
                 <ArrowRight className="size-4 ml-2" />
               </Button>
               <Button

@@ -7,13 +7,6 @@ const loginSchema = z.object({
   password: z.string().min(1, 'Mot de passe requis'),
 })
 
-// Demo credentials for testing
-const DEMO_CREDENTIALS = {
-  'admin@saintjean.sn': { password: 'password123', role: 'ADMIN_PAROISSE' },
-  'pere.mbaye@saintjean.sn': { password: 'password123', role: 'ABBE' },
-  'pere.sow@saintjean.sn': { password: 'password123', role: 'ABBE' },
-}
-
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -31,6 +24,8 @@ export async function POST(request: NextRequest) {
             address: true,
             phone: true,
             email: true,
+            city: true,
+            country: true,
             logoUrl: true,
             photoUrl: true,
             motto: true,
@@ -39,6 +34,9 @@ export async function POST(request: NextRequest) {
             secondaryColor: true,
             plan: true,
             numberOfFaithful: true,
+            isActive: true,
+            isVerified: true,
+            setupComplete: true,
           },
         },
       },
@@ -51,11 +49,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // In production: verify with bcrypt. For demo, check plain or demo credentials
-    const demoCred = DEMO_CREDENTIALS[data.email as keyof typeof DEMO_CREDENTIALS]
-    const passwordValid = demoCred
-      ? data.password === demoCred.password
-      : data.password === user.password
+    // In production: verify with bcrypt. For demo, check plain text password.
+    // const passwordValid = await bcrypt.compare(data.password, user.password)
+    const passwordValid = data.password === user.password
 
     if (!passwordValid) {
       return NextResponse.json(
@@ -67,6 +63,14 @@ export async function POST(request: NextRequest) {
     if (!user.isActive) {
       return NextResponse.json(
         { message: 'Votre compte a été désactivé' },
+        { status: 403 }
+      )
+    }
+
+    // Check if church is active
+    if (user.church && !user.church.isActive) {
+      return NextResponse.json(
+        { message: 'Votre paroisse a été désactivée' },
         { status: 403 }
       )
     }

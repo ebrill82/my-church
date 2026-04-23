@@ -2,6 +2,12 @@ import { create } from 'zustand'
 
 export type AppPage =
   | 'landing'
+  | 'register'
+  | 'register-church'
+  | 'register-faithful'
+  | 'church-search'
+  | 'church-public'
+  | 'login'
   | 'setup-wizard'
   | 'dashboard'
   | 'dashboard-members'
@@ -45,6 +51,12 @@ export interface Church {
   secondaryColor?: string
   plan?: string
   numberOfFaithful?: number
+  city?: string
+  country?: string
+  diocese?: string
+  isActive?: boolean
+  isVerified?: boolean
+  setupComplete?: boolean
 }
 
 interface AppState {
@@ -52,7 +64,7 @@ interface AppState {
   currentPage: AppPage
   setPage: (page: AppPage) => void
 
-  // Auth modal
+  // Auth modal (kept for backward compat)
   authModalOpen: boolean
   authModalTab: AuthModalTab
   setAuthModal: (open: boolean, tab?: AuthModalTab) => void
@@ -67,6 +79,10 @@ interface AppState {
   login: (user: User, church: Church | null) => void
   logout: () => void
   setUser: (user: User | null) => void
+
+  // Church context for public pages
+  selectedChurch: Church | null
+  setSelectedChurch: (church: Church | null) => void
 
   // Sidebar
   sidebarOpen: boolean
@@ -121,6 +137,7 @@ export const useAppStore = create<AppState>((set) => ({
       isLoading: false,
       currentPage: 'landing',
       sidebarOpen: true,
+      selectedChurch: null,
     })
     if (typeof window !== 'undefined') {
       localStorage.removeItem('mychurch_user')
@@ -133,6 +150,10 @@ export const useAppStore = create<AppState>((set) => ({
       isAuthenticated: !!user,
       isLoading: false,
     }),
+
+  // Church context
+  selectedChurch: null,
+  setSelectedChurch: (church) => set({ selectedChurch: church }),
 
   // Sidebar
   sidebarOpen: true,

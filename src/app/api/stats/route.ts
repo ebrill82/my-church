@@ -10,7 +10,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ message: 'churchId requis' }, { status: 400 })
     }
 
-    // Get counts
+    // Verify the church exists
+    const church = await db.church.findUnique({
+      where: { id: churchId },
+      select: { id: true, isActive: true },
+    })
+
+    if (!church) {
+      return NextResponse.json(
+        { message: 'Paroisse introuvable' },
+        { status: 404 }
+      )
+    }
+
+    // Get counts — all filtered by churchId
     const [
       totalMembers,
       activeMembers,
@@ -58,7 +71,7 @@ export async function GET(request: NextRequest) {
       return acc
     }, {} as Record<string, number>)
 
-    // Monthly donations for chart (last 6 months)
+    // Monthly donations for chart (last 6 months) — all filtered by churchId
     const monthlyDonations = []
     for (let i = 5; i >= 0; i--) {
       const date = new Date()
@@ -84,7 +97,7 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Recent members
+    // Recent members — filtered by churchId
     const recentMembers = await db.user.findMany({
       where: { churchId, role: 'PAROISSIEN' },
       orderBy: { createdAt: 'desc' },
@@ -100,7 +113,7 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    // Upcoming activities
+    // Upcoming activities — filtered by churchId
     const upcomingActivities = await db.activity.findMany({
       where: {
         churchId,

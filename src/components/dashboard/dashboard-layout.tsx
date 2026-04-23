@@ -298,6 +298,7 @@ export function DashboardLayout() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-medium truncate">{church.name}</p>
+                  <p className="text-[10px] text-white/40 truncate">{church.city}, {church.country}</p>
                   <Badge
                     variant="outline"
                     className={`text-[10px] h-4 px-1 border-0 ${
@@ -322,7 +323,12 @@ export function DashboardLayout() {
               {sidebarOpen && (
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-medium truncate">{userDisplayName}</p>
-                  <p className="text-[10px] text-white/50 truncate">{user?.role || ''}</p>
+                  <p className="text-[10px] text-white/50 truncate">
+                    {user?.role === 'ADMIN_PAROISSE' ? 'Administrateur' : 
+                     user?.role === 'ABBE' ? 'Abbé' : 
+                     user?.role === 'DIRIGEANT_GROUPE' ? 'Dir. de groupe' : 
+                     user?.role === 'PAROISSIEN' ? 'Paroissien' : user?.role || ''}
+                  </p>
                 </div>
               )}
               {sidebarOpen && (

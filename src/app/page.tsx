@@ -6,6 +6,11 @@ import LandingPage from '@/components/church/landing-page'
 import { AuthModal } from '@/components/church/auth-modal'
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout'
 import { SetupWizard } from '@/components/church/setup-wizard'
+import RegisterPage from '@/components/church/register-page'
+import RegisterChurchPage from '@/components/church/register-church-page'
+import ChurchSearchPage from '@/components/church/church-search-page'
+import RegisterFaithfulPage from '@/components/church/register-faithful-page'
+import LoginPage from '@/components/church/login-page'
 
 export default function Home() {
   const { isAuthenticated, isLoading, currentPage } = useAppStore()
@@ -41,6 +46,24 @@ export default function Home() {
   // Setup wizard takes priority over everything
   if (currentPage === 'setup-wizard') {
     return <SetupWizard />
+  }
+
+  // Auth pages (not authenticated)
+  if (!isAuthenticated) {
+    switch (currentPage) {
+      case 'register':
+        return <RegisterPage />
+      case 'register-church':
+        return <RegisterChurchPage />
+      case 'church-search':
+        return <ChurchSearchPage />
+      case 'register-faithful':
+        return <RegisterFaithfulPage />
+      case 'login':
+        return <LoginPage />
+      default:
+        break
+    }
   }
 
   return (

@@ -814,3 +814,34 @@ Files Created:
 - /home/z/my-project/src/app/api/churches/[churchId]/members/[memberId]/route.ts
 - /home/z/my-project/src/app/api/audit/route.ts
 - /home/z/my-project/src/app/api/cemetery/concessions/route.ts
+
+---
+Task ID: 2-b
+Agent: Auth Registration Components Developer
+Task: Build New Auth and Registration Components for Multi-Parish SaaS
+
+Work Log:
+- Created 5 new auth/registration components and 2 API routes
+- register-page.tsx: Main choice page with Parish/Faithful cards
+- register-church-page.tsx: 2-step parish registration with password strength, slug auto-gen
+- church-search-page.tsx: Parish search with country groups, invitation links
+- register-faithful-page.tsx: Faithful registration with church banner
+- login-page.tsx: Split-layout login with demo credentials
+- /api/churches/search: Search churches by name/city/country
+- /api/churches/check-slug: Check slug availability
+- Updated /api/auth/register to support registrationType (church/faithful)
+- Updated page.tsx with routing for new auth pages
+- ESLint: 0 errors, 0 warnings
+
+Files Created:
+- /src/components/church/register-page.tsx
+- /src/components/church/register-church-page.tsx
+- /src/components/church/church-search-page.tsx
+- /src/components/church/register-faithful-page.tsx
+- /src/components/church/login-page.tsx
+- /src/app/api/churches/search/route.ts
+- /src/app/api/churches/check-slug/route.ts
+
+Files Modified:
+- /src/app/api/auth/register/route.ts
+- /src/app/page.tsx

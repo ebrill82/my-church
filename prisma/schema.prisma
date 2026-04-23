@@ -1,4 +1,4 @@
-// MY CHURCH SaaS Platform - Complete Database Schema
+// MY CHURCH SaaS Platform - Multi-Parish Database Schema
 // Database: SQLite
 
 generator client {
@@ -173,27 +173,27 @@ model User {
   isActive       Boolean  @default(true)
   emailVerified  Boolean  @default(false)
   lastLoginAt    DateTime?
-  churchId       String?
+  churchId       String
 
   // Relations
-  church               Church?                @relation(fields: [churchId], references: [id])
-  appointmentsAsFidele Appointment[]          @relation("UserAppointments")
-  appointmentsAsAbbe   Appointment[]          @relation("AbbeAppointments")
+  church               Church                @relation(fields: [churchId], references: [id])
+  appointmentsAsFidele Appointment[]         @relation("UserAppointments")
+  appointmentsAsAbbe   Appointment[]         @relation("AbbeAppointments")
   groupMembers         GroupMember[]
-  sentMessages         Message[]              @relation("SentMessages")
-  receivedMessages     Message[]              @relation("ReceivedMessages")
+  sentMessages         Message[]             @relation("SentMessages")
+  receivedMessages     Message[]             @relation("ReceivedMessages")
   donations            Donation[]
   certificates         Certificate[]
   notifications        Notification[]
-  createdActivities    Activity[]             @relation("ActivityCreator")
-  celebrandActivities  Activity[]             @relation("ActivityCelebrand")
-  invitedGroupMembers  GroupMember[]          @relation("GroupInviter")
-  recordedQuetes       Quete[]                @relation("QueteRecorder")
-  celebrantQuetes      Quete[]                @relation("QueteCelebrant")
-  approvedCertificates Certificate[]          @relation("CertificateApprover")
-  ownedConcessions     CemeteryConcession[]   @relation("ConcessionOwner")
-  auditLogs            AuditLog[]             @relation("AuditUser")
-  groupAdmin           Group[]                @relation("GroupAdmin")
+  createdActivities    Activity[]            @relation("ActivityCreator")
+  celebrandActivities  Activity[]            @relation("ActivityCelebrand")
+  invitedGroupMembers  GroupMember[]         @relation("GroupInviter")
+  recordedQuetes       Quete[]               @relation("QueteRecorder")
+  celebrantQuetes      Quete[]               @relation("QueteCelebrant")
+  approvedCertificates Certificate[]         @relation("CertificateApprover")
+  ownedConcessions     CemeteryConcession[]  @relation("ConcessionOwner")
+  auditLogs            AuditLog[]            @relation("AuditUser")
+  groupAdmin           Group[]               @relation("GroupAdmin")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -207,9 +207,11 @@ model Church {
   id              String     @id @default(cuid())
   name            String
   slug            String     @unique
-  address         String
+  email           String     @unique
   phone           String
-  email           String
+  address         String
+  city            String
+  country         String
   website         String?
   diocese         String?
   numberOfFaithful Int       @default(0)
@@ -223,6 +225,11 @@ model Church {
   customDomain    String?
   plan            ChurchPlan @default(FREE)
   subscriptionId  String?
+
+  // Multi-tenant flags
+  isActive        Boolean    @default(true)
+  isVerified      Boolean    @default(false)
+  setupComplete   Boolean    @default(false)
 
   // Relations
   subscription          Subscription?
@@ -243,6 +250,7 @@ model Church {
 
   @@index([slug])
   @@index([plan])
+  @@index([country, city])
 }
 
 model Subscription {
