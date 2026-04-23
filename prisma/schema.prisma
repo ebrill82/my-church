@@ -1,0 +1,639 @@
+// MY CHURCH SaaS Platform - Complete Database Schema
+// Database: SQLite
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN_PAROISSE
+  ABBE
+  DIRIGEANT_GROUPE
+  PAROISSIEN
+  VISITEUR
+}
+
+enum ChurchPlan {
+  FREE
+  STANDARD
+  PREMIUM
+  DIOCESE
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  EXPIRED
+}
+
+enum BillingCycle {
+  MONTHLY
+  ANNUAL
+}
+
+enum InvoiceStatus {
+  PAID
+  UNPAID
+  VOID
+}
+
+enum PaymentMethod {
+  ORANGE_MONEY
+  M_PESA
+  STRIPE
+}
+
+enum AppointmentStatus {
+  EN_ATTENTE
+  CONFIRME
+  REFUSE
+  ANNULE
+  TERMINE
+  REPROGRAMME
+}
+
+enum ActivityType {
+  MESSE
+  ADORATION
+  CONFESSION
+  CATECHESE
+  REUNION
+  EVENT_SPECIAL
+  AUTRE
+}
+
+enum ActivityVisibility {
+  PUBLIC
+  MEMBERS_ONLY
+  GROUP_ONLY
+}
+
+enum GroupType {
+  SCOUT
+  CHORALE
+  LECTEURS
+  ENFANTS_COEUR
+  JEUNES
+  AUTRE
+}
+
+enum GroupMemberRole {
+  MEMBER
+  ADMIN_GROUP
+}
+
+enum GroupMemberStatus {
+  INVITED
+  ACCEPTED
+  REFUSED
+  LEFT
+}
+
+enum DonationStatus {
+  INITIATED
+  PROCESSING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum DonationMethod {
+  ORANGE_MONEY
+  M_PESA
+  STRIPE
+  CASH
+}
+
+enum CertificateType {
+  BAPTISM
+  CONFIRMATION
+  MARRIAGE
+  OTHER
+}
+
+enum CertificateStatus {
+  DEMANDED
+  VERIFIED
+  APPROVED
+  REJECTED
+  DELIVERED
+}
+
+enum ConcessionStatus {
+  ACTIVE
+  EXPIRED
+  TRANSFERRED
+}
+
+enum NotificationType {
+  RDV
+  ACTIVITY
+  GROUP_INVITE
+  DONATION
+  CERTIFICATE
+  SYSTEM
+  MESSAGE
+}
+
+enum PlanLimitPlan {
+  FREE
+  STANDARD
+  PREMIUM
+  DIOCESE
+}
+
+// ============================================
+// MODELS
+// ============================================
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  password       String
+  firstName      String
+  lastName       String
+  phone          String
+  address        String
+  dateOfBirth    String?
+  gender         String?
+  avatarUrl      String?
+  role           UserRole @default(VISITEUR)
+  isActive       Boolean  @default(true)
+  emailVerified  Boolean  @default(false)
+  lastLoginAt    DateTime?
+  churchId       String?
+
+  // Relations
+  church               Church?                @relation(fields: [churchId], references: [id])
+  appointmentsAsFidele Appointment[]          @relation("UserAppointments")
+  appointmentsAsAbbe   Appointment[]          @relation("AbbeAppointments")
+  groupMembers         GroupMember[]
+  sentMessages         Message[]              @relation("SentMessages")
+  receivedMessages     Message[]              @relation("ReceivedMessages")
+  donations            Donation[]
+  certificates         Certificate[]
+  notifications        Notification[]
+  createdActivities    Activity[]             @relation("ActivityCreator")
+  celebrandActivities  Activity[]             @relation("ActivityCelebrand")
+  invitedGroupMembers  GroupMember[]          @relation("GroupInviter")
+  recordedQuetes       Quete[]                @relation("QueteRecorder")
+  celebrantQuetes      Quete[]                @relation("QueteCelebrant")
+  approvedCertificates Certificate[]          @relation("CertificateApprover")
+  ownedConcessions     CemeteryConcession[]   @relation("ConcessionOwner")
+  auditLogs            AuditLog[]             @relation("AuditUser")
+  groupAdmin           Group[]                @relation("GroupAdmin")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([churchId])
+  @@index([role])
+  @@index([email])
+}
+
+model Church {
+  id              String     @id @default(cuid())
+  name            String
+  slug            String     @unique
+  address         String
+  phone           String
+  email           String
+  website         String?
+  diocese         String?
+  numberOfFaithful Int       @default(0)
+  logoUrl         String?
+  photoUrl        String?
+  motto           String?
+  description     String?
+  primaryColor    String     @default("#1B3A5C")
+  secondaryColor  String     @default("#C9A84C")
+  fontFamily      String?
+  customDomain    String?
+  plan            ChurchPlan @default(FREE)
+  subscriptionId  String?
+
+  // Relations
+  subscription          Subscription?
+  users                 User[]
+  appointments          Appointment[]
+  activities            Activity[]
+  groups                Group[]
+  donations             Donation[]
+  quetes                Quete[]
+  certificates          Certificate[]
+  cemeteryConcessions   CemeteryConcession[]
+  auditLogs             AuditLog[]
+  paymentConfigs        PaymentConfig[]
+  invoices              Invoice[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+  @@index([plan])
+}
+
+model Subscription {
+  id                    String             @id @default(cuid())
+  churchId              String             @unique
+  plan                  ChurchPlan
+  status                SubscriptionStatus @default(TRIALING)
+  billingCycle          BillingCycle
+  currentPeriodStart    DateTime
+  currentPeriodEnd      DateTime
+  trialEndsAt           DateTime?
+  stripeSubscriptionId  String?
+  stripeCustomerId      String?
+  cancelAtPeriodEnd     Boolean            @default(false)
+  canceledAt            DateTime?
+  endedAt               DateTime?
+
+  // Relations
+  church    Church    @relation(fields: [churchId], references: [id])
+  invoices  Invoice[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([churchId])
+  @@index([status])
+  @@index([stripeSubscriptionId])
+}
+
+model Invoice {
+  id                String        @id @default(cuid())
+  subscriptionId    String
+  churchId          String
+  amount            Float
+  currency          String        @default("USD")
+  status            InvoiceStatus @default(UNPAID)
+  invoiceNumber     String        @unique
+  invoiceUrl        String?
+  pdfUrl            String?
+  stripeInvoiceId   String?
+  paidAt            DateTime?
+  dueDate           DateTime?
+
+  // Relations
+  subscription  Subscription @relation(fields: [subscriptionId], references: [id])
+  church        Church       @relation(fields: [churchId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([subscriptionId])
+  @@index([churchId])
+  @@index([status])
+}
+
+model PaymentConfig {
+  id           String        @id @default(cuid())
+  churchId     String
+  method       PaymentMethod
+  config       String        // JSON string for SQLite
+  isActive     Boolean       @default(false)
+  lastTestedAt DateTime?
+  testStatus   String?
+
+  // Relations
+  church Church @relation(fields: [churchId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([churchId])
+  @@index([method])
+}
+
+model Appointment {
+  id            String            @id @default(cuid())
+  userId        String            // the faithful
+  abbeId        String            // the priest
+  churchId      String
+  date          String            // String for SQLite flexibility
+  startTime     String
+  endTime       String
+  motif         String
+  notes         String?
+  notesFidele   String?
+  status        AppointmentStatus @default(EN_ATTENTE)
+  canceledBy    String?
+  canceledReason String?
+  reminderSent  Boolean           @default(false)
+  reminderSentAt DateTime?
+
+  // Relations
+  user   User   @relation("UserAppointments", fields: [userId], references: [id])
+  abbe   User   @relation("AbbeAppointments", fields: [abbeId], references: [id])
+  church Church @relation(fields: [churchId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([abbeId])
+  @@index([churchId])
+  @@index([status])
+  @@index([date])
+}
+
+model Activity {
+  id                  String            @id @default(cuid())
+  churchId            String
+  createdById         String
+  title               String
+  description         String?
+  type                ActivityType
+  startDateTime       String            // String for SQLite
+  endDateTime         String            // String for SQLite
+  location            String?
+  isRecurring         Boolean           @default(false)
+  recurrenceRule      String?
+  recurrenceEndDate   String?
+  maxParticipants     Int?
+  currentParticipants Int               @default(0)
+  visibility          ActivityVisibility @default(PUBLIC)
+  groupId             String?
+  celebrandId         String?
+  imageUrl            String?
+  attachmentUrl       String?
+  notifyBefore        Int?              // minutes
+
+  // Relations
+  church     Church   @relation(fields: [churchId], references: [id])
+  createdBy  User     @relation("ActivityCreator", fields: [createdById], references: [id])
+  group      Group?   @relation(fields: [groupId], references: [id])
+  celebrand  User?    @relation("ActivityCelebrand", fields: [celebrandId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([churchId])
+  @@index([createdById])
+  @@index([type])
+  @@index([groupId])
+  @@index([startDateTime])
+}
+
+model Group {
+  id          String    @id @default(cuid())
+  churchId    String
+  adminId     String
+  name        String
+  description String?
+  type        GroupType
+  imageUrl    String?
+  maxMembers  Int?
+  isActive    Boolean   @default(true)
+
+  // Relations
+  church       Church        @relation(fields: [churchId], references: [id])
+  admin        User          @relation("GroupAdmin", fields: [adminId], references: [id])
+  groupMembers GroupMember[]
+  messages     Message[]
+  activities   Activity[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([churchId])
+  @@index([adminId])
+  @@index([type])
+  @@index([isActive])
+}
+
+model GroupMember {
+  id          String            @id @default(cuid())
+  groupId     String
+  userId      String
+  role        GroupMemberRole   @default(MEMBER)
+  status      GroupMemberStatus @default(INVITED)
+  invitedById String
+  invitedAt   DateTime?
+  respondedAt DateTime?
+
+  // Relations
+  group     Group @relation(fields: [groupId], references: [id])
+  user      User  @relation(fields: [userId], references: [id])
+  invitedBy User  @relation("GroupInviter", fields: [invitedById], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([groupId, userId])
+  @@index([groupId])
+  @@index([userId])
+  @@index([status])
+}
+
+model Message {
+  id         String  @id @default(cuid())
+  senderId   String
+  receiverId String?
+  groupId    String?
+  content    String
+  isRead     Boolean @default(false)
+  readAt     DateTime?
+
+  // Relations
+  sender   User   @relation("SentMessages", fields: [senderId], references: [id])
+  receiver User?  @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  group    Group? @relation(fields: [groupId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([groupId])
+  @@index([isRead])
+}
+
+model Donation {
+  id             String         @id @default(cuid())
+  userId         String?
+  churchId       String
+  amount         Float
+  currency       String         @default("USD")
+  method         DonationMethod
+  transactionRef String?
+  status         DonationStatus @default(INITIATED)
+  phoneNumber    String?
+  isAnonymous    Boolean        @default(false)
+  receiptSent    Boolean        @default(false)
+  receiptEmail   String?
+
+  // Relations
+  user   User?  @relation(fields: [userId], references: [id])
+  church Church @relation(fields: [churchId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([churchId])
+  @@index([status])
+  @@index([method])
+}
+
+model Quete {
+  id                 String  @id @default(cuid())
+  churchId           String
+  recordedById       String
+  date               String  // String for SQLite
+  massTime           String?
+  celebrantId        String?
+  ordinaryAmount     Float   @default(0)
+  specialAmount      Float   @default(0)
+  specialIntention   String?
+  massOfferingAmount Float   @default(0)
+  totalAmount        Float   @default(0)
+  notes              String?
+  exportedAt         DateTime?
+
+  // Relations
+  church     Church @relation(fields: [churchId], references: [id])
+  recordedBy User   @relation("QueteRecorder", fields: [recordedById], references: [id])
+  celebrant  User?  @relation("QueteCelebrant", fields: [celebrantId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([churchId])
+  @@index([recordedById])
+  @@index([date])
+}
+
+model Certificate {
+  id              String           @id @default(cuid())
+  churchId        String
+  userId          String
+  approvedById    String?
+  type            CertificateType
+  details         String           // JSON string for SQLite
+  status          CertificateStatus @default(DEMANDED)
+  pdfUrl          String?
+  rejectionReason String?
+  fee             Float            @default(0)
+  feePaid         Boolean          @default(false)
+
+  // Relations
+  church     Church @relation(fields: [churchId], references: [id])
+  user       User   @relation(fields: [userId], references: [id])
+  approvedBy User?  @relation("CertificateApprover", fields: [approvedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([churchId])
+  @@index([userId])
+  @@index([status])
+  @@index([type])
+}
+
+model CemeteryConcession {
+  id        String            @id @default(cuid())
+  churchId  String
+  ownerId   String
+  location  String?
+  plotNumber String?
+  startDate String            // String for SQLite
+  endDate   String            // String for SQLite
+  duration  String?
+  status    ConcessionStatus  @default(ACTIVE)
+  notes     String?
+
+  // Relations
+  church  Church   @relation(fields: [churchId], references: [id])
+  owner   User     @relation("ConcessionOwner", fields: [ownerId], references: [id])
+  defunts Defunt[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([churchId])
+  @@index([ownerId])
+  @@index([status])
+}
+
+model Defunt {
+  id            String  @id @default(cuid())
+  concessionId  String
+  firstName     String
+  lastName      String
+  birthDate     String? // String for SQLite
+  deathDate     String? // String for SQLite
+  burialDate    String? // String for SQLite
+  notes         String?
+
+  // Relations
+  concession CemeteryConcession @relation(fields: [concessionId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([concessionId])
+}
+
+model Notification {
+  id     String           @id @default(cuid())
+  userId String
+  type   NotificationType
+  title  String
+  body   String
+  data   String?          // JSON string for SQLite
+  link   String?
+  isRead Boolean          @default(false)
+  readAt DateTime?
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([type])
+}
+
+model PlanLimit {
+  id          String         @id @default(cuid())
+  plan        PlanLimitPlan
+  featureKey  String
+  maxValue    Int
+  description String?
+
+  @@unique([plan, featureKey])
+  @@index([plan])
+}
+
+model AuditLog {
+  id         String  @id @default(cuid())
+  churchId   String?
+  userId     String?
+  action     String
+  entity     String
+  entityId   String?
+  oldValues  String? // JSON string for SQLite
+  newValues  String? // JSON string for SQLite
+  ipAddress  String?
+  userAgent  String?
+
+  // Relations
+  church Church? @relation(fields: [churchId], references: [id])
+  user   User?   @relation("AuditUser", fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([churchId])
+  @@index([userId])
+  @@index([entity])
+  @@index([action])
+  @@index([createdAt])
+}
